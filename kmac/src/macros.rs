@@ -3,7 +3,7 @@
 macro_rules! impl_kmac {
     (
         $name:ident, $full_name:ident, $cshakecore:ty,
-        $alg_name:expr, $output_size:ident $(,)?
+        $alg_name:expr, $output_size:expr $(,)?
     ) => {
         pub struct $name {
             digest: $cshakecore,
@@ -35,15 +35,13 @@ macro_rules! impl_kmac {
                 let block = buffer.pad_with_zeros();
                 core.update_blocks(slice::from_ref(&block));
 
-                Self { digest: core };
+                Self { digest: core }
             }
         }
 
         impl MacMarker for $name {}
 
-        //todo
-        // do we actually need this?
-        // we don't process any blocks right? we simply call cshake
+        //todo: fix error
         impl BlockSizeUser for $name {
             type BlockSize = <$cshakecore as BlockSizeUser>::BlockSize;
         }
@@ -63,10 +61,16 @@ macro_rules! impl_kmac {
             }
         }
 
-        //todo
-        // how to implement this? check extentable output core of kmac impl
         impl FixedOutputCore for $name {
-
+            fn finalize_fixed_core(&mut self, buffer: &mut Buffer<Self>, out: &mut Output<Self>) {
+                let mut b = [0u8; 9];
+                buffer.digest_blocks(
+                    right_encode($output_size, &mut b),
+                    |blocks| { self.digest.update_blocks(blocks) },
+                );
+                let mut reader = self.digest.finalize_xof_core(buffer);
+                reader.read(out);
+            }
         }
 
         impl AlgorithmName for $name {

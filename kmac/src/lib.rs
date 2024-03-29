@@ -10,15 +10,15 @@ use digest::{
     consts::{U136, U168, U32, U64},
 };
 
-use sha3::{CShake128Core, CShake256Core};
+use sha3::{CShake128, CShake128Core, CShake256Core};
 
 #[macro_use]
 mod macros;
 
 const FUNCTION_NAME: &[u8] = b"KMAC";
 
-impl_kmac!(Kmac128Core, Kmac128, CShake128Core, "KMAC128", U32);
-impl_kmac!(Kmac256Core, Kmac256, CShake256Core, "KMAC256", U64);
+impl_kmac!(Kmac128Core, Kmac128, CShake128Core, "KMAC128", 32);
+impl_kmac!(Kmac256Core, Kmac256, CShake256Core, "KMAC256", 64);
 
 
 #[inline(always)]
